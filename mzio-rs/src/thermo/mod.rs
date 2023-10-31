@@ -14,7 +14,13 @@ mod test {
     use crate::mgf::*;
     use crate::mgf::spectrum::MgfSpectrumHeader;
 
-    const RAW_FILE_PARSER_PATH_STR: &'static str = "../target/debug/rawfileparser";
+    const RAW_FILE_PARSER_PATH_STR: &'static str =
+        if cfg!(debug_assertions) {
+            "../target/debug/rawfileparser"
+        } else {
+            "../target/release/rawfileparser"
+        };
+
     const RAW_FILE_PATH_STR: &'static str = "../test_files/thermo/small.RAW";
     const TEMP_MGF_PATH_STR: &'static str = "../test_files/mgf/Velos005137.mgf.tmp";
     const EXPECTED_NUM_SPECTRA: usize = 48;
@@ -24,9 +30,9 @@ mod test {
     // So all the tests have to be performed within the same function
     #[test]
     fn test_thermo_reader() {
-        let raw_file_path = Path::new(RAW_FILE_PATH_STR);
         let rawfileparser_path = Path::new(RAW_FILE_PARSER_PATH_STR);
-
+        let raw_file_path = Path::new(RAW_FILE_PATH_STR);
+        let tmp_mgf_file_path = Path::new(TEMP_MGF_PATH_STR);
 
         let thermo_reader = ThermoReader::new(raw_file_path, rawfileparser_path).unwrap();
 
@@ -39,7 +45,6 @@ mod test {
         // Record the starting time
         let start = std::time::Instant::now();
 
-        let tmp_mgf_file_path = Path::new(TEMP_MGF_PATH_STR);
         let mut mgf_writer = MgfWriter::with_capacity(4 * 1024 * 1024, tmp_mgf_file_path).unwrap();
 
         thermo_reader.process_spectra_in_parallel(|spectrum_res|{
@@ -90,57 +95,6 @@ mod test {
         assert_eq!(mgf_entries.len(), EXPECTED_NUM_MS2_SPECTRA);
 
         std::fs::remove_file(tmp_mgf_file_path).unwrap();
-
-        /*
-         // Record the starting time
-        let start = std::time::Instant::now();
-
-        let raw_file_path = Path::new(r"..\..\sage_dia_experiment\downloads\OXCCF230120_07.raw");
-        let rawfileparser_path = Path::new(RAW_FILE_PARSER_PATH_STR);
-        let thermo_reader = ThermoReader::new(raw_file_path, rawfileparser_path).unwrap();
-        let mut mgf_writer = MgfWriter::with_capacity(4 * 1024 * 1024, Path::new("../test_files/OXCCF230120_07.mgf")).unwrap();
-
-        //for ms2_spec_res in thermo_reader.ms2_iter().iterator() {
-        //  let ms2_spec = ms2_spec_res.unwrap();
-
-        thermo_reader.process_spectra_in_parallel(|spectrum_res|{
-
-            let spectrum= spectrum_res?;
-            if spectrum.get_ms_level() == 2 {
-                let ms2_spec = spectrum;
-
-                let (prec_mz_opt, perc_charge_opt) = ms2_spec.get_precursor_mz_and_charge();
-                let smd = &ms2_spec.metadata;
-                let scan_idx = smd.index.parse::<u32>().unwrap();
-
-                let mgf_spec = MgfSpectrum {
-                    header: MgfSpectrumHeader {
-                        title: smd.id.clone(),
-                        precursor_mz: prec_mz_opt.unwrap_or(0.0),
-                        precursor_charge: perc_charge_opt,
-                        precursor_mass: None,
-                        retention_time: ms2_spec.get_first_scan_start_time().clone().map(|rt_minutes| rt_minutes * 60.0),
-                        scan_number: Some(scan_idx)
-                    },
-                    data: SpectrumData {
-                        mz_list: ms2_spec.data.mz_list,
-                        intensity_list: ms2_spec.data.intensity_list.iter().map(|&i| i as f32).collect()
-                    },
-                };
-
-                mgf_writer.write_spectrum(&mgf_spec, true).unwrap();
-            }
-
-            Ok(())
-        }, 1000).unwrap();
-
-        mgf_writer.flush().unwrap();
-
-        // Record the ending time
-        let duration = start.elapsed();
-
-        println!("Has converted RAW to MGF in: {:?}", duration);
-         */
 
         ()
     }

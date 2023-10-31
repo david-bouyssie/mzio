@@ -12,15 +12,20 @@ publish = false
 
 [lib]
 name = "mzio"
+doctest = false ### for dev purpose only
 # crate-type = ["cdylib"]
 
 [dependencies]
 anyhow = "1.0.75"
 fallible-iterator = "0.2.0"
 fast-float = { version = "0.2.0" , optional = true }
-serde = "*"
+serde = "1.0.190"
 mzcore = { path = "../../mzcore/mzcore-rs" }
+thermo-raw-file-streamer = { git = "https://github.com/david-bouyssie/thermo-raw-file-streamer.git", optional = true }
+#thermo-raw-file-streamer = { path = "../../thermo-raw-file-streamer", optional = true }
+
 
 [features]
 fasta = []
 mgf = ["dep:fast-float"]
+thermo = ["dep:thermo-raw-file-streamer"]

@@ -43,6 +43,7 @@ impl FallibleIterator for MgfReader {
         let mut precursor_mz: f64 = 0.0;
         let mut precursor_charge: Option<i8> = None;
         let mut retention_time: Option<f64> = None;
+        let mut scan_number: Option<u32> = None;
         let mut mz_list: Vec<f64> = Vec::new();
         let mut intensity_list: Vec<f32> = Vec::new();
 
@@ -74,6 +75,7 @@ impl FallibleIterator for MgfReader {
                         precursor_mz,
                         precursor_charge,
                         retention_time,
+                        scan_number,
                         mz_list,
                         intensity_list
                     )));
@@ -100,6 +102,9 @@ impl FallibleIterator for MgfReader {
                             precursor_mz = fast_float::parse(prec_mz_str_opt.unwrap_or_else(|| "0.0"))?;
                         } else if line.starts_with("RTINSECONDS=") {
                             retention_time = Some(fast_float::parse(&line[12..])?);
+                        } else if line.starts_with("SCANS=") {
+                            let value = &line[6..];
+                            scan_number = Some( value.parse::<u32>()?);
                         } else if line.starts_with("CHARGE=") {
                             // Locate the value and its sign within the string
                             let value = &line[7..];

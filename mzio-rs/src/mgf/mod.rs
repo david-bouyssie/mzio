@@ -41,7 +41,7 @@ mod test {
             tmp_mgf_file_path
         ).unwrap();
 
-        mgf_writer.write_all(entries.iter()).unwrap();
+        mgf_writer.write_all(entries.iter(), false).unwrap();
         mgf_writer.flush().unwrap();
 
         let tmp_mgf_content  = fs::read_to_string(tmp_mgf_file_path).unwrap().trim().to_string();

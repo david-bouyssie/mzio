@@ -14,6 +14,7 @@ pub struct MgfSpectrumHeader {
     pub precursor_charge: Option<i8>,
     pub precursor_mass: Option<f64>, // Not in the header (for post-processing convenience)
     pub retention_time: Option<f64>,
+    pub scan_number: Option<u32>,
 }
 
 impl MgfSpectrumHeader {
@@ -32,7 +33,8 @@ impl MgfSpectrumHeader {
         title: String,
         precursor_mz: f64,
         precursor_charge: Option<i8>,
-        retention_time: Option<f64>
+        retention_time: Option<f64>,
+        scan_number: Option<u32>
     ) -> Self {
         Self {
             title,
@@ -40,6 +42,7 @@ impl MgfSpectrumHeader {
             precursor_charge,
             precursor_mass: None,
             retention_time,
+            scan_number
         }
     }
 
@@ -87,6 +90,12 @@ impl MgfSpectrumHeader {
         self.retention_time
     }
 
+    /// Returns scan number
+    ///
+    pub fn get_scan_number(&self) -> Option<u32>  {
+        self.scan_number
+    }
+
 }
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -112,11 +121,12 @@ impl MgfSpectrum {
         precursor_mz: f64,
         precursor_charge: Option<i8>,
         retention_time: Option<f64>,
+        scan_number: Option<u32>,
         mz_list: Vec<f64>,
         intensity_list: Vec<f32>
     ) -> Self {
 
-        let mgf_header =  MgfSpectrumHeader::new(title, precursor_mz, precursor_charge, retention_time);
+        let mgf_header =  MgfSpectrumHeader::new(title, precursor_mz, precursor_charge, retention_time, scan_number);
 
         let data = SpectrumData {
             mz_list,

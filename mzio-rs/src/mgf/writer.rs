@@ -30,13 +30,20 @@ impl MgfWriter {
         })
     }
 
+    pub fn with_capacity(buffer_capacity: usize, mgf_file_path: &Path) -> Result<Self> {
+        let mgf_file: File = File::create(mgf_file_path)?;
+        Ok(Self {
+            internal_writer: BufWriter::with_capacity(buffer_capacity, mgf_file)
+        })
+    }
+
     /// Writes a spectrum into the file.
     /// 
     /// # Arguments
     ///
     /// * `spectrum` - Spectrum
     /// 
-    pub fn write_spectrum(&mut self, spectrum: &MgfSpectrum) -> Result<usize> {
+    pub fn write_spectrum(&mut self, spectrum: &MgfSpectrum, round_values: bool) -> Result<usize> {
         let spec_header = &spectrum.header;
 
         let mut written_bytes: usize = 0;
@@ -45,6 +52,9 @@ impl MgfWriter {
         written_bytes += self._write_string(format!("TITLE={}\n", spec_header.get_title()))?;
         written_bytes += self._write_string(format!("PEPMASS={}", spec_header.get_precursor_mz()))?;
 
+        if let Some(scan_number) = spec_header.get_scan_number() {
+            written_bytes += self._write_string(format!("\nSCANS={}", scan_number))?;
+        }
         if let Some(retention_time) = spec_header.get_retention_time() {
             written_bytes += self._write_string(format!("\nRTINSECONDS={}", retention_time))?;
         }
@@ -53,7 +63,12 @@ impl MgfWriter {
             written_bytes += self._write_string(format!("\nCHARGE={}{}", charge, charge_sign))?;
         }
         for (mz, intensity) in zip(spectrum.get_mz_list(), spectrum.get_intensity_list()) {
-            written_bytes += self._write_string(format!("\n{mz} {intensity}"))?;
+            if round_values {
+                written_bytes += self._write_string(format!("\n{:.5} {:.3}", mz, intensity))?;
+            } else {
+                written_bytes += self._write_string(format!("\n{mz} {intensity}"))?;
+            }
+
         }
         written_bytes += self._write_str("\nEND IONS\n")?;
 
@@ -76,13 +91,13 @@ impl MgfWriter {
     ///
     /// * `spectra` - Iterator of spectra
     /// 
-    pub fn write_all<'b, I>(&mut self, spectra: I) -> Result<usize>
+    pub fn write_all<'b, I>(&mut self, spectra: I, round_values: bool) -> Result<usize>
     where
         I: Iterator<Item = &'b MgfSpectrum>,
     {
         let mut written_bytes: usize = 0;
         for spectrum in spectra {
-            written_bytes += self.write_spectrum(spectrum)?;
+            written_bytes += self.write_spectrum(spectrum, round_values)?;
         }
         return Ok(written_bytes);
     }

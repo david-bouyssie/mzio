@@ -29,7 +29,7 @@ impl MgfWriter {
     }
 
     pub fn write_spectrum(&mut self, spectrum: &MgfSpectrum) -> Result<usize> {
-        self.base_writer.write_spectrum(spectrum.into())
+        self.base_writer.write_spectrum(spectrum.into(), false)
         /*match self.base_writer.write_spectrum(spectrum.into()) {
             Ok(written_bytes) => Ok(written_bytes),
             Err(err) => Err(err)

@@ -30,7 +30,8 @@ impl MgfSpectrum {
         title: String,
         precursor_mz: f64,
         precursor_charge: Option<i8>,
-        retention_time: Option<f64>
+        retention_time: Option<f64>,
+        scan_number: Option<u32>,
     ) -> Self {
         Self {
             base_spectrum: BaseMgfSpectrum::new(
@@ -38,6 +39,7 @@ impl MgfSpectrum {
                 precursor_mz,
                 precursor_charge,
                 retention_time,
+                scan_number,
                 mz_list,
                 intensity_list,
             )
